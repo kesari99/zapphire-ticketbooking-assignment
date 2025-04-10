@@ -1,4 +1,4 @@
-# � Seat Booking App
+#  Seat Booking App
 
 A dynamic seat booking system built with **Next.js 14 (App Router)**, **Prisma**, and **PostgreSQL**, with full **authentication**, **client-side UI**, and **cookie-based session handling**.
 
@@ -49,8 +49,8 @@ A dynamic seat booking system built with **Next.js 14 (App Router)**, **Prisma**
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/your-username/seat-booking-app.git
-cd seat-booking-app
+git https://github.com/kesari99/zapphire-ticketbooking-assignment.git
+
 
 # 2. Install dependencies
 npm install
