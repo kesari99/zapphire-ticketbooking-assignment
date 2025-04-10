@@ -1,9 +1,12 @@
+export const dynamic = 'force-dynamic'; 
+export const runtime = 'nodejs'; 
+
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import prisma from '@/app/lib/prisma';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'user'; // Use .env in production
+const JWT_SECRET = process.env.JWT_SECRET || 'user'; 
 
 export async function POST(request) {
   try {

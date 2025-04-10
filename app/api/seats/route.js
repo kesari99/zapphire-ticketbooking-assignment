@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic'; 
+export const runtime = 'nodejs'; 
+
 import prisma from '@/app/lib/prisma';
 import { NextResponse } from 'next/server';
 
