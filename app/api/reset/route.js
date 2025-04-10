@@ -1,4 +1,7 @@
-// app/api/reset/route.js
+export const dynamic = 'force-dynamic'; 
+export const runtime = 'nodejs'; 
+
+
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
@@ -17,13 +20,10 @@ export async function POST() {
       );
     }
     
-    // Verify token
     jwt.verify(token, JWT_SECRET);
     
-    // Delete all reservations
     await prisma.reservation.deleteMany({});
     
-    // Reset all seats
     await prisma.seat.updateMany({
       data: {
         isBooked: false,

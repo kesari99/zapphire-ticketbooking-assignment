@@ -1,9 +1,13 @@
+export const dynamic = 'force-dynamic'; // avoid static optimization
+export const runtime = 'nodejs'; // Important to force Node.js
+
+
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import prisma from '@/app/lib/prisma';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'; // Use .env in production
+const JWT_SECRET = process.env.JWT_SECRET || 'user'; 
 
 export async function GET(request) {
   try {

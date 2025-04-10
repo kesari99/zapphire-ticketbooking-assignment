@@ -1,3 +1,7 @@
+export const dynamic = 'force-dynamic'; // avoid static optimization
+export const runtime = 'nodejs'; // Important to force Node.js
+
+
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
