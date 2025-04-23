@@ -1,6 +1,5 @@
 export const dynamic = 'force-dynamic'; 
 export const runtime = 'nodejs'; 
-
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
@@ -54,6 +53,7 @@ export async function POST(request) {
       );
     }
     
+    // Group seats by row
     const seatsByRow = availableSeats.reduce((acc, seat) => {
       if (!acc[seat.rowNumber]) {
         acc[seat.rowNumber] = [];
@@ -61,33 +61,96 @@ export async function POST(request) {
       acc[seat.rowNumber].push(seat);
       return acc;
     }, {});
+
+    
+    // Get all row numbers sorted
+    const allRows = Object.keys(seatsByRow).map(Number).sort((a, b) => a - b);
     
     let seatsToBook = [];
     
-    for (const rowNumber in seatsByRow) {
+    // Try to find seats in a single row first
+    for (const rowNumber of allRows) {
       if (seatsByRow[rowNumber].length >= numberOfSeats) {
         seatsToBook = seatsByRow[rowNumber].slice(0, numberOfSeats);
         break;
       }
     }
     
+    // If we couldn't find enough seats in a single row,
+    // try to find adjacent rows with enough seats
     if (seatsToBook.length === 0) {
-      const sortedRows = Object.keys(seatsByRow).sort(
-        (a, b) => seatsByRow[b].length - seatsByRow[a].length
-      );
       
-      let remainingSeats = numberOfSeats;
-      seatsToBook = [];
+      let bestStartingRow = null;
+      let bestTotalSeats = 0;
       
-      for (const rowNumber of sortedRows) {
-        const seatsFromRow = seatsByRow[rowNumber].slice(0, remainingSeats);
-        seatsToBook = [...seatsToBook, ...seatsFromRow];
-        remainingSeats -= seatsFromRow.length;
+      for (let i = 0; i < allRows.length; i++) {
+        let totalSeats = 0;
+        let consecutiveRows = 0;
         
-        if (remainingSeats <= 0) break;
+        // Check how many consecutive rows we need
+        for (let j = i; j < allRows.length; j++) {
+          const currentRow = allRows[j];
+          const nextRowExpected = j === i ? currentRow : allRows[j-1] + 1;
+          
+          // If rows are not consecutive, break
+          if (currentRow !== nextRowExpected && j > i) {
+            break;
+          }
+          
+          totalSeats += seatsByRow[currentRow].length;
+          consecutiveRows++;
+          
+          if (totalSeats >= numberOfSeats) {
+            if (bestStartingRow === null || consecutiveRows < bestTotalSeats) {
+              bestStartingRow = i;
+              bestTotalSeats = consecutiveRows;
+            }
+            break;
+          }
+        }
+      }
+      
+      if (bestStartingRow !== null) {
+        let remainingSeats = numberOfSeats;
+        let rowIndex = bestStartingRow;
+        
+        // Book seats from adjacent rows
+        while (remainingSeats > 0 && rowIndex < allRows.length) {
+          const currentRow = allRows[rowIndex];
+          const nextRowExpected = rowIndex === bestStartingRow ? currentRow : allRows[rowIndex-1] + 1;
+          
+          // If rows are not consecutive, break
+          if (currentRow !== nextRowExpected && rowIndex > bestStartingRow) {
+            break;
+          }
+          
+          const seatsFromRow = seatsByRow[currentRow].slice(0, remainingSeats);
+          seatsToBook = [...seatsToBook, ...seatsFromRow];
+          remainingSeats -= seatsFromRow.length;
+          rowIndex++;
+        }
+      }
+      
+      // If we still couldn't find adjacent rows with enough seats,
+      // fall back to booking any available seats starting from rows with the most seats
+      if (seatsToBook.length === 0) {
+        const sortedRows = Object.keys(seatsByRow).sort(
+          (a, b) => seatsByRow[b].length - seatsByRow[a].length
+        );
+        
+        let remainingSeats = numberOfSeats;
+        
+        for (const rowNumber of sortedRows) {
+          const seatsFromRow = seatsByRow[rowNumber].slice(0, remainingSeats);
+          seatsToBook = [...seatsToBook, ...seatsFromRow];
+          remainingSeats -= seatsFromRow.length;
+          
+          if (remainingSeats <= 0) break;
+        }
       }
     }
     
+    // Create reservation
     const reservation = await prisma.reservation.create({
       data: {
         userId,
@@ -95,6 +158,7 @@ export async function POST(request) {
       },
     });
     
+    // Book the selected seats
     await Promise.all(
       seatsToBook.map(seat =>
         prisma.seat.update({

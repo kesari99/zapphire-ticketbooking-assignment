@@ -18,14 +18,12 @@ export default function Home() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Check if user is authenticated
     const checkAuth = async () => {
       try {
         const response = await axios.get('/api/auth/me');
         setUser(response.data);
         fetchSeats();
       } catch (err) {
-        // User is not authenticated, redirect to login
         router.push('/login');
       }
     };

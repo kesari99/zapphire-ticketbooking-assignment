@@ -13,7 +13,8 @@ export async function POST() {
       httpOnly: true,
       path: '/',
       secure: true,
-      maxAge: 0, // Expire immediately
+      sameSite: 'none', 
+      maxAge: 0, 
     });
     
     return NextResponse.json({ message: 'Logged out successfully' });
